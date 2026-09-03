@@ -1,4 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
-    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadence</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+
+<body>
+    <div class="app">
+
+        <header class="topbar">
+            <div class="brand">
+                <h1>cadence<span>.</span></h1>
+                <p>a record of what you finish</p>
+            </div>
+
+            <button
+                id="themeButton"
+                class="theme-button"
+                aria-label="Toggle theme"
+            >
+                ◐
+            </button>
+        </header>
+
+        <main>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-label">CURRENT STREAK</p>
+
+                    <div class="stat-value">
+                        <span id="streak">0</span>
+                        <span class="stat-unit">days</span>
+                    </div>
+
+                    <p class="stat-description">
+                        keep the rhythm going
+                    </p>
+                </div>
+
+                <div class="stat-card">
+                    <p class="stat-label">TOTAL FINISHED</p>
+
+                     <div class="stat-value">
+                        <span id="total">0</span>
+                    </div>
+
+                    <p class="stat-description">
+                        and counting
+                    </p>
+                </div>
+
+                <div class="stat-card">
+                    <p class="stat-label">LONGEST STREAK</p>
+
+                    <div class="stat-value">
+                        <span id="longest">0</span>
+                        <span class="stat-unit">days</span>
+                    </div>
+
+                    <p class="stat-description">
+                        your personal best
+                    </p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">ACTIVITY</p>
+                        <h2>Your rhythm</h2>
+                    </div>
+
+                    <p id="activityText">
+                        Start your cadence.
+                    </p>
+                </div>
+
+                <div
+                    id="calendar"
+                    class="activity-calendar"
+                    aria-label="30 day activity"
+                ></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">NEW ENTRY</p>
+                        <h2>What did you finish?</h2>
+                    </div>
+                </div>
+
+                <form id="mediaForm">
+
+                    <div class="form-field">
+                        <label for="title">TITLE</label>
+
+                        <input
+                            id="title"
+                            name="title"
+                            type="text"
+                            placeholder="What did you watch, read, or play?"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="mediaType">TYPE</label>
+
+                        <select id="mediaType" name="mediaType">
+                            <option value="Movie">Movie</option>
+                            <option value="Show">Show</option>
+                            <option value="Book">Book</option>
+                            <option value="Game">Game</option>
+                            <option value="Album">Album</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="genre">GENRE</label>
+
+                        <input
+                            id="genre"
+                            name="genre"
+                            type="text"
+                            placeholder="Sci-fi, drama..."
+                            autocomplete="off"
+                        >
+                    </div>
+
+                                       <div class="form-field">
+                        <label for="rating">RATING</label>
+
+                        <select id="rating" name="rating">
+                            <option value="0">No rating</option>
+                            <option value="1">★</option>
+                            <option value="2">★★</option>
+                            <option value="3">★★★</option>
+                            <option value="4">★★★★</option>
+                            <option value="5">★★★★★</option>
+                        </select>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="submit-button"
+                    >
+                        + LOG IT
+                    </button>
+
+                    </form>
+            </section>
+
+            <section class="controls">
+
+                <div class="search-wrapper">
+                    <span class="search-symbol">/</span>
+
+                    <input
+                        id="search"
+                        type="text"
+                        placeholder="Search your log..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <select id="filter">
+                    <option value="All">Everything</option>
+                    <option value="Movie">Movies</option>
+                    <option value="Show">Shows</option>
+                    <option value="Book">Books</option>
+                    <option value="Game">Games</option>
+                    <option value="Album">Albums</option>
+                    <option value="Other">Other</option>
+                </select>
+
+            </section>
+
+            <section class="media-section">
+
+                <div
+                    id="mediaList"
+                    class="media-list"
+                ></div>
+
+                <div
+                    id="empty"
+                    class="empty-state"
+                 >
+                    <div class="empty-icon">+</div>
+
+                    <h3>
+                        Nothing logged yet.
+                    </h3>
+
+                    <p>
+                        Finish something and make it count.
+                    </p>
+                </div>
+
+            </section>
+
+            <section class="panel analytics">
+
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">ANALYTICS</p>
+                        <h2>Your output</h2>
+                    </div>
+                </div>
+
+                 <div class="chart-container">
+                    <canvas id="chart"></canvas>
+                </div>
+
+            </section>
+
+        </main>
+
+        <footer>
+            <span>CADENCE / 2026</span>
+
+            <span>
+                [/] search , [N] new entry , [ESC] close
+            </span>
+        </footer>
+
+    </div>
+
+    <script src="static/app.js"></script>
+</body>
 </html>
