@@ -444,3 +444,57 @@ footer {
     }
 }
 
+@media (max-width: 600px) {
+    .app {
+        width: min(100% - 24px, 1120px);
+    }
+
+    .topbar {
+        padding-top: 30px;
+    }
+
+    .brand h1 {
+        letter-spacing: -3px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+
+    .panel-heading {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .activity-calendar {
+        grid-template-columns: repeat(15, 1fr);
+    }
+
+    form#mediaForm {
+        grid-template-columns: 1fr;
+    }
+
+    .form-field:first-child {
+        grid-column: auto;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    #filter {
+        width: 100%;
+    }
+
+    .media {
+        grid-template-columns: 48px 1fr;
+    }
+
+     .media > div:last-child {
+        grid-column: 2;
+    }
+
+    footer {
+        flex-direction: column;
+    }
+}
