@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
     --background: #0d0d0f;
@@ -32,7 +32,7 @@ body {
         ),
         var(--background);
     color: var(--text);
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Outfit", sans-serif;
     transition:
         background 0.25s ease,
         color 0.25s ease;
@@ -83,10 +83,10 @@ select:focus-visible {
 .brand p {
     margin: 14px 0 0;
     color: var(--muted);
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Outfit", sans-serif;
     font-size: 12px;
     font-weight: 400;
-    letter-spacing: -0.2px;
+    letter-spacing: 0;
 }
 
 .theme-button {
@@ -160,6 +160,7 @@ select:focus-visible {
 .stat-description {
     margin: 0;
     color: var(--muted);
+    font-family: "Outfit", sans-serif;
     font-size: 12px;
 }
 
@@ -181,7 +182,9 @@ select:focus-visible {
 
 .panel-heading h2 {
     margin: 5px 0 0;
+    font-family: "Outfit", sans-serif;
     font-size: 25px;
+    font-weight: 600;
     letter-spacing: -1px;
 }
 
@@ -373,9 +376,10 @@ select:focus {
 }
 
 .media-title {
+    font-family: "Outfit", sans-serif;
     font-size: 16px;
     font-weight: 600;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
 }
 
 .media-meta {
@@ -432,14 +436,16 @@ select:focus {
 
 .empty-state h3 {
     margin: 0;
+    font-family: "Outfit", sans-serif;
     font-size: 19px;
+    font-weight: 600;
 }
 
 .empty-state p {
     margin: 7px 0 0;
     color: var(--muted);
-    font-family: "DM Mono", monospace;
-    font-size: 10px;
+    font-family: "Outfit", sans-serif;
+    font-size: 11px;
 }
 
 .analytics {
