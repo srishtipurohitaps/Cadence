@@ -593,5 +593,111 @@ document.addEventListener("keydown", async (event) => {
     if (event.key === "ArrowDown") {
         event.preventDefault();
 
-        if 
+        if (isTyping) {
+            focusNextFormField();
+        } else {
+            moveSelection(1);
+        }
+
+        return;
     }
+
+    if (event.key === "ArrowUp") {
+        event.preventDefault();
+
+        if (isTyping) {
+            focusPreviousFormField();
+        } else {
+            moveSelection(-1);
+        }
+
+        return;
+    }
+
+    if (event.key.toLowerCase() === "t" && !isTyping) {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
+
+     if (event.key === "Delete" && selectedIndex >= 0 && !isTyping) {
+        event.preventDefault();
+
+        const selected = getFilteredMedia()[selectedIndex];
+
+        if (selected) {
+            await deleteMedia(selected.id);
+        }
+
+        return;
+    }
+
+    if (
+        event.key >= "1" &&
+        event.key <= "5" &&
+        selectedIndex >= 0 &&
+        !isTyping
+    ) {
+        event.preventDefault();
+
+        const selected = getFilteredMedia()[selectedIndex];
+
+        if (!selected) {
+            return;
+        }
+
+        const rating = Number(event.key);
+
+        const response = await fetch(
+            `/api/media/${selected.id}/rating`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    rating
+                })
+            }
+        );
+
+         if (response.ok) {
+            const updated: Media = await response.json();
+
+            media = media.map((item) =>
+                item.id === updated.id
+                    ? updated
+                    : item
+            );
+
+            renderMedia();
+            renderChart();
+        }
+    }
+});
+
+mediaForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await addMedia ();
+});
+
+searchInput.addEventListener("input", () => {
+    selectedIndex = -1;
+    renderMedia();
+});
+
+filterSelect.addEventListener("change", () => {
+    selectedIndex = -1;
+    renderMedia();
+});
+
+themeButton.addEventListener("click", (event) => {
+    event.preventDefault();
+});
+
+mediaList.addEventListener("click", (event) => {
+    event.preventDefault();
+});
+
+loadTheme();
+loadMedia();
