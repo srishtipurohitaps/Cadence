@@ -544,3 +544,54 @@ function toggleTheme(): void {
         : "dark"
     );
 }
+
+function loadTheme(): void {
+    const savedTheme = localStorage.getItem("cadence-theme");
+
+    if (savedTheme === "light") {
+        document.body.classList.add("light");
+    }
+}
+
+document.addEventListener("keydown", async (event) => {
+    if (event.key === "Tab") {
+        event.preventDefault();
+        return;
+    }
+
+    const target = event.target as HTMLElement;
+    const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXT AREA" ||
+        target.tagName === "SELECT";
+
+    if (event.key === "/" && !isTyping) {
+        event.preventDefault();
+        focusSearch();
+        return;
+    }
+
+    if (event.key.toLowerCase() === "n" && !isTyping) {
+        event.preventDefault();
+        focusNewEntry();
+        return;
+    }
+
+    if (event.key === "Escape") {
+        event.preventDefault();
+
+        if (isTyping) {
+            (target as HTMLElement).blur();
+        } else {
+            selectedIndex = -1;
+            updateSelectedMedia();
+        }
+
+        return
+    }
+
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+
+        if 
+    }
