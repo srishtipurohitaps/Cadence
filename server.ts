@@ -13,6 +13,10 @@ app.get("/", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "pages", "index.html"));
 });
 
+app.get("/about", (_req, res) => {
+    res.sendFile(path.join(process.cwd(), "pages", "about.html"));
+});
+
 app.get("/api/media", (_req, res) => {
     const media = db
         .prepare(`
@@ -35,6 +39,8 @@ app.post("/api/media", (req, res) => {
         return;
     }
 
+    const now = new Date().toISOString();
+
     const result = db
         .prepare(`
             INSERT INTO media (
@@ -47,7 +53,7 @@ app.post("/api/media", (req, res) => {
             )
             VALUES (?, ?, ?, ?, ?, ?)
         `)
-        run(
+        .run(
             title.trim(),
             type,
             genre?.trim() || null,
@@ -107,7 +113,7 @@ app.patch("/api/media/:id/rating", (req, res) => {
             WHERE id = ?
         `)
         .run(rating, id);
-    
+
     if (result.changes === 0) {
         res.status(404).json({
             error: "Media not found"
