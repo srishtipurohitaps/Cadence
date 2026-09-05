@@ -68,6 +68,25 @@ select:focus-visible {
     padding: 46px 0 38px;
 }
 
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.about-link {
+    color: var(--muted);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.about-link:hover {
+    color: var(--accent);
+}
+
 .brand h1 {
     margin: 0;
     font-size: clamp(42px, 7vw, 76px);
@@ -186,6 +205,85 @@ select:focus-visible {
     font-size: 25px;
     font-weight: 600;
     letter-spacing: -1px;
+}
+
+.about-intro {
+    max-width: 720px;
+}
+
+.about-intro p {
+    margin: 0 0 18px;
+    font-size: 22px;
+    line-height: 1.45;
+    letter-spacing: -0.4px;
+}
+
+.about-intro p:last-child {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.about-copy {
+    max-width: 720px;
+}
+
+.about-copy p {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.about-copy p:last-child {
+    margin-bottom: 0;
+}
+
+.keyboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.keyboard-grid div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 55px;
+    padding: 10px 13px;
+    border: 1px solid var(--border);
+}
+
+.keyboard-grid span {
+    color: var(--muted);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+}
+
+kbd {
+    min-width: 42px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    text-align: center;
+}
+
+.about-back {
+    margin: 25px 0 10px;
+}
+
+.about-back a {
+    color: var(--accent);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    text-decoration: none;
+}
+
+.about-back a:hover {
+    text-decoration: underline;
 }
 
 #activityText {
@@ -508,6 +606,14 @@ body.light {
         padding-top: 30px;
     }
 
+    .topbar-actions {
+        gap: 9px;
+    }
+
+    .about-link {
+        font-size: 9px;
+    }
+
     .brand h1 {
         letter-spacing: -3px;
     }
@@ -551,5 +657,13 @@ body.light {
 
     footer {
         flex-direction: column;
+    }
+
+    .about-intro p {
+        font-size: 18px;
+    }
+
+    .keyboard-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }

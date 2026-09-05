@@ -60,7 +60,7 @@ function getFilteredMedia(): Media[] {
         const matchesFilter =
             filter === "All" || item.type === filter;
 
-         return matchesSearch && matchesFilter;
+        return matchesSearch && matchesFilter;
     });
 }
 
@@ -118,7 +118,7 @@ function calculateStreaks(): {
         let checkDate = dates.includes(todayString)
             ? new Date(today)
             : new Date(yesterday);
-        
+
         while (dates.includes(checkDate.toISOString().slice(0, 10))) {
             current++;
             checkDate.setDate(checkDate.getDate() - 1);
@@ -127,7 +127,7 @@ function calculateStreaks(): {
 
     return {
         current,
-        longest,
+        longest
     };
 }
 
@@ -174,7 +174,7 @@ function renderCalendar(): void {
         const day = document.createElement("div");
         day.className = "day";
 
-         if (count > 0) {
+        if (count > 0) {
             day.classList.add("active");
         }
 
@@ -213,7 +213,7 @@ function renderMedia(): void {
         article.dataset.index = String(index);
         article.tabIndex = -1;
 
-         const stars =
+        const stars =
             item.rating > 0
                 ? "★".repeat(item.rating)
                 : "—";
@@ -238,7 +238,7 @@ function renderMedia(): void {
             <div class="media-actions">
                 <span class="stars">${stars}</span>
 
-                                <button
+                <button
                     class="delete"
                     data-id="${item.id}"
                     aria-label="Delete ${escapeHtml(item.title)}"
@@ -272,7 +272,7 @@ function updateSelectedMedia(): void {
                 : "0";
     });
 
-     if (selectedIndex >= 0 && entries[selectedIndex]) {
+    if (selectedIndex >= 0 && entries[selectedIndex]) {
         entries[selectedIndex].scrollIntoView({
             block: "nearest"
         });
@@ -419,7 +419,7 @@ async function addMedia(): Promise<void> {
                 rating: Number(ratingInput.value)
             })
         });
-        
+
         if (!response.ok) {
             throw new Error("Failed to add media");
         }
@@ -466,7 +466,7 @@ function moveSelection(direction: number): void {
     if (entries.length === 0) {
         return;
     }
-    
+
     if (selectedIndex === -1) {
         selectedIndex = direction > 0 ? 0 : entries.length - 1;
     } else {
@@ -540,8 +540,8 @@ function toggleTheme(): void {
     localStorage.setItem(
         "cadence-theme",
         document.body.classList.contains("light")
-        ? "light"
-        : "dark"
+            ? "light"
+            : "dark"
     );
 }
 
@@ -560,9 +560,10 @@ document.addEventListener("keydown", async (event) => {
     }
 
     const target = event.target as HTMLElement;
+
     const isTyping =
         target.tagName === "INPUT" ||
-        target.tagName === "TEXT AREA" ||
+        target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
 
     if (event.key === "/" && !isTyping) {
@@ -581,13 +582,13 @@ document.addEventListener("keydown", async (event) => {
         event.preventDefault();
 
         if (isTyping) {
-            (target as HTMLElement).blur();
+            target.blur();
         } else {
             selectedIndex = -1;
             updateSelectedMedia();
         }
 
-        return
+        return;
     }
 
     if (event.key === "ArrowDown") {
@@ -620,7 +621,11 @@ document.addEventListener("keydown", async (event) => {
         return;
     }
 
-     if (event.key === "Delete" && selectedIndex >= 0 && !isTyping) {
+    if (
+        event.key === "Delete" &&
+        selectedIndex >= 0 &&
+        !isTyping
+    ) {
         event.preventDefault();
 
         const selected = getFilteredMedia()[selectedIndex];
@@ -661,7 +666,7 @@ document.addEventListener("keydown", async (event) => {
             }
         );
 
-         if (response.ok) {
+        if (response.ok) {
             const updated: Media = await response.json();
 
             media = media.map((item) =>
@@ -678,7 +683,7 @@ document.addEventListener("keydown", async (event) => {
 
 mediaForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await addMedia ();
+    await addMedia();
 });
 
 searchInput.addEventListener("input", () => {
