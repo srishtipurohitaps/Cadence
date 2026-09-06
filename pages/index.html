@@ -24,6 +24,7 @@
                 <a
                     href="/about"
                     class="about-link"
+                    id="aboutLink"
                 >
                     ABOUT
                 </a>
@@ -181,10 +182,21 @@
                         type="text"
                         placeholder="Search your log..."
                         autocomplete="off"
+                        aria-label="Search your log"
                     >
                 </div>
 
-                <select id="filter">
+                <div id="filterTabs" class="filter-tabs" role="tablist" aria-label="Filter media by type">
+                    <button type="button" role="tab" class="filter-tab active" data-filter="All" aria-selected="true" tabindex="0">Everything</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Movie" aria-selected="false" tabindex="-1">Movies</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Show" aria-selected="false" tabindex="-1">Shows</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Book" aria-selected="false" tabindex="-1">Books</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Game" aria-selected="false" tabindex="-1">Games</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Album" aria-selected="false" tabindex="-1">Albums</button>
+                    <button type="button" role="tab" class="filter-tab" data-filter="Other" aria-selected="false" tabindex="-1">Other</button>
+                </div>
+
+                <select id="filter" aria-label="Filter by media type" style="display: none;">
                     <option value="All">Everything</option>
                     <option value="Movie">Movies</option>
                     <option value="Show">Shows</option>
@@ -220,16 +232,26 @@
 
             </section>
 
-            <section class="panel analytics">
+            <section
+                class="panel analytics"
+                id="analyticsSection"
+                tabindex="0"
+                role="region"
+                aria-label="Monthly output chart: use Left and Right arrow keys to inspect months"
+            >
 
                 <div class="panel-heading">
                     <div>
                         <p class="eyebrow">ANALYTICS</p>
                         <h2>Your output</h2>
                     </div>
+
+                    <p id="analyticsText" class="analytics-detail">
+                        Monthly output
+                    </p>
                 </div>
 
-                <div class="chart-container">
+                <div id="chartContainer" class="chart-container">
                     <canvas id="chart"></canvas>
                 </div>
 
@@ -240,10 +262,15 @@
         <footer>
             <span>CADENCE / 2026</span>
 
-            <span>
-                [↑ ↓] move [← →] choose / rate [/] search [N] new
-                [A] about [T] theme [DEL] remove [PGUP/PGDN] scroll
-            </span>
+            <div class="footer-shortcuts" aria-label="Keyboard shortcuts">
+                <span>[↑ ↓] move</span>
+                <span>[← →] choose/rate</span>
+                <span>[/] search</span>
+                <span>[N] new</span>
+                <span>[A] about</span>
+                <span>[T] theme</span>
+                <span>[DEL] remove</span>
+            </div>
         </footer>
 
     </div>

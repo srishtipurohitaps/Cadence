@@ -1,6 +1,49 @@
 const themeButton = document.getElementById("themeButton");
-const backLink = document.querySelector(".about-back a");
-const aboutControls = [themeButton, backLink];
+const backLink = (document.getElementById("backLink") ||
+    document.querySelector(".about-back a"));
+const aboutControls = [];
+if (themeButton)
+    aboutControls.push(themeButton);
+if (backLink)
+    aboutControls.push(backLink);
+function disableMouse() {
+    const blockPointer = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    };
+    const pointerEvents = [
+        "pointerdown",
+        "pointerup",
+        "pointermove",
+        "pointerover",
+        "pointerout",
+        "pointerenter",
+        "pointerleave",
+        "mousedown",
+        "mouseup",
+        "mousemove",
+        "mouseover",
+        "mouseout",
+        "mouseenter",
+        "mouseleave",
+        "contextmenu",
+        "dblclick",
+        "wheel",
+        "dragstart"
+    ];
+    for (const eventName of pointerEvents) {
+        window.addEventListener(eventName, blockPointer, { capture: true, passive: false });
+    }
+    window.addEventListener("click", (e) => {
+        const pe = e;
+        if (pe.pointerType === "mouse" || pe.pointerType === "touch" || pe.pointerType === "pen" || e.detail > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }, { capture: true });
+}
 function toggleTheme() {
     document.body.classList.toggle("light");
     localStorage.setItem("cadence-theme", document.body.classList.contains("light")
@@ -14,26 +57,30 @@ function loadTheme() {
     }
 }
 function returnToCadence(action) {
-    sessionStorage.setItem("cadence-keyboard-action", action);
+    if (action) {
+        sessionStorage.setItem("cadence-keyboard-action", action);
+    }
     window.location.href = "/";
 }
 function focusAboutControl(direction) {
-    const currentIndex = aboutControls.indexOf(document.activeElement);
+    if (aboutControls.length === 0)
+        return;
+    const current = document.activeElement;
+    const currentIndex = aboutControls.indexOf(current);
     if (currentIndex === -1) {
-        aboutControls[direction > 0 ? 0 : aboutControls.length - 1].focus();
+        aboutControls[direction > 0 ? 0 : aboutControls.length - 1]?.focus();
         return;
     }
-    const nextIndex = (currentIndex + direction + aboutControls.length) %
-        aboutControls.length;
-    aboutControls[nextIndex].focus();
+    const nextIndex = (currentIndex + direction + aboutControls.length) % aboutControls.length;
+    aboutControls[nextIndex]?.focus();
+}
+if (themeButton) {
+    themeButton.addEventListener("click", () => {
+        toggleTheme();
+    });
 }
 document.addEventListener("keydown", (event) => {
-    if (event.key === "Tab") {
-        event.preventDefault();
-        return;
-    }
     const target = event.target;
-    const isOwnControl = aboutControls.includes(target);
     if (event.altKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
         toggleTheme();
@@ -41,42 +88,72 @@ document.addEventListener("keydown", (event) => {
     }
     if (event.altKey && event.key.toLowerCase() === "h") {
         event.preventDefault();
-        window.location.href = "/";
+        returnToCadence();
         return;
     }
     const isTyping = target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
-    if (event.key === "PageDown" && !isTyping) {
-        event.preventDefault();
-        window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
-        return;
-    }
-    if (event.key === "PageUp" && !isTyping) {
-        event.preventDefault();
-        window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
-        return;
-    }
-    if (event.key === "Home" && !isTyping) {
-        event.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-    }
-    if (event.key === "End" && !isTyping) {
-        event.preventDefault();
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        return;
-    }
-    if (event.key === " " && !isTyping && target.tagName !== "BUTTON") {
-        event.preventDefault();
-        window.scrollBy({
-            top: event.shiftKey ? -window.innerHeight * 0.85 : window.innerHeight * 0.85,
-            behavior: "smooth"
-        });
-        return;
-    }
     if (isTyping) {
         return;
+    }
+    if (event.key === "Tab") {
+        const first = aboutControls[0];
+        const last = aboutControls[aboutControls.length - 1];
+        if (event.shiftKey && target === first) {
+            event.preventDefault();
+            last?.focus();
+            return;
+        }
+        if (!event.shiftKey && target === last) {
+            event.preventDefault();
+            first?.focus();
+            return;
+        }
+    }
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        focusAboutControl(event.key === "ArrowDown" ? 1 : -1);
+        return;
+    }
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        if (target === themeButton) {
+            event.preventDefault();
+            toggleTheme();
+            return;
+        }
+        if (target === backLink && event.key === "ArrowLeft") {
+            event.preventDefault();
+            returnToCadence();
+            return;
+        }
+    }
+    if (event.key === "Enter") {
+        if (target === themeButton) {
+            event.preventDefault();
+            toggleTheme();
+            return;
+        }
+        if (target === backLink) {
+            event.preventDefault();
+            returnToCadence();
+            return;
+        }
+        event.preventDefault();
+        returnToCadence("confirm");
+        return;
+    }
+    if (event.key === " ") {
+        if (target === themeButton) {
+            event.preventDefault();
+            toggleTheme();
+            return;
+        }
+        if (target === backLink) {
+            event.preventDefault();
+            returnToCadence();
+            return;
+        }
     }
     if (event.key === "/") {
         event.preventDefault();
@@ -86,26 +163,6 @@ document.addEventListener("keydown", (event) => {
     if (event.key.toLowerCase() === "n") {
         event.preventDefault();
         returnToCadence("new");
-        return;
-    }
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-        event.preventDefault();
-        focusAboutControl(event.key === "ArrowDown" ? 1 : -1);
-        return;
-    }
-    if (event.key === "Enter" && target === themeButton) {
-        event.preventDefault();
-        toggleTheme();
-        return;
-    }
-    if (event.key === "Enter" && target === backLink) {
-        event.preventDefault();
-        window.location.href = "/";
-        return;
-    }
-    if (event.key === "Enter" && !isOwnControl) {
-        event.preventDefault();
-        returnToCadence("confirm");
         return;
     }
     if (event.key >= "1" && event.key <= "5") {
@@ -120,34 +177,15 @@ document.addEventListener("keydown", (event) => {
     }
     if (event.key.toLowerCase() === "h") {
         event.preventDefault();
-        window.location.href = "/";
+        returnToCadence();
         return;
     }
     if (event.key === "Escape") {
         event.preventDefault();
-        window.location.href = "/";
+        returnToCadence();
         return;
     }
 });
-for (const eventName of [
-    "click",
-    "dblclick",
-    "auxclick",
-    "pointerdown",
-    "pointerup",
-    "pointermove",
-    "contextmenu",
-    "dragstart",
-    "touchstart",
-    "touchmove",
-    "touchend"
-]) {
-    document.addEventListener(eventName, (event) => {
-        event.preventDefault();
-    }, { capture: true, passive: false });
-}
-document.addEventListener("wheel", (event) => {
-    event.preventDefault();
-}, { capture: true, passive: false });
 loadTheme();
+disableMouse();
 export {};

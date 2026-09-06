@@ -9,7 +9,7 @@
     "start": "npm run build && node dist/server.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
+    "better-sqlite3": "^12.11.1",
     "express": "^5.1.0"
   },
   "devDependencies": {

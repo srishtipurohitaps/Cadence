@@ -1,33 +1,169 @@
 let media = [];
 let selectedIndex = -1;
 let chart = null;
+const aboutLink = (document.getElementById("aboutLink") ||
+    document.querySelector(".about-link"));
 const mediaList = document.getElementById("mediaList");
 const emptyState = document.getElementById("empty");
 const searchInput = document.getElementById("search");
 const filterSelect = document.getElementById("filter");
+const filterTabs = Array.from(document.querySelectorAll(".filter-tab"));
 const mediaForm = document.getElementById("mediaForm");
 const titleInput = document.getElementById("title");
 const mediaType = document.getElementById("mediaType");
 const genreInput = document.getElementById("genre");
 const ratingInput = document.getElementById("rating");
+const submitButton = mediaForm.querySelector(".submit-button");
 const streakElement = document.getElementById("streak");
 const totalElement = document.getElementById("total");
 const longestElement = document.getElementById("longest");
 const calendar = document.getElementById("calendar");
 const activityText = document.getElementById("activityText");
 const themeButton = document.getElementById("themeButton");
-const aboutLink = document.querySelector(".about-link");
-const formControls = [
-    aboutLink,
-    themeButton,
-    titleInput,
-    mediaType,
-    genreInput,
-    ratingInput,
-    mediaForm.querySelector(".submit-button"),
-    searchInput,
-    filterSelect
-];
+const analyticsSection = (document.getElementById("analyticsSection") ||
+    document.querySelector(".panel.analytics"));
+const chartContainer = document.getElementById("chartContainer");
+const analyticsText = document.getElementById("analyticsText");
+let activeDayIndex = 29;
+let activeChartMonthIndex = 5;
+let chartMonthlyData = [];
+function getAnalyticsElement() {
+    return analyticsSection || chartContainer;
+}
+function scrollIntoViewWithFooter(el) {
+    const footer = document.querySelector("footer");
+    const footerHeight = footer ? footer.offsetHeight + 24 : 80;
+    const availableBottom = window.innerHeight - footerHeight;
+    const rect = el.getBoundingClientRect();
+    if (rect.bottom > availableBottom) {
+        window.scrollBy({
+            top: rect.bottom - availableBottom + 10,
+            behavior: "instant"
+        });
+    }
+    else if (rect.top < 20) {
+        window.scrollBy({
+            top: rect.top - 20,
+            behavior: "instant"
+        });
+    }
+}
+function focusAnalytics() {
+    const el = getAnalyticsElement();
+    if (el) {
+        el.focus({ preventScroll: true });
+        scrollIntoViewWithFooter(el);
+    }
+}
+function isAnalyticsFocused() {
+    const el = getAnalyticsElement();
+    const active = document.activeElement;
+    return Boolean(el && active && (active === el || el.contains(active)));
+}
+function disableMouse() {
+    const blockPointer = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    };
+    const pointerEvents = [
+        "pointerdown",
+        "pointerup",
+        "pointermove",
+        "pointerover",
+        "pointerout",
+        "pointerenter",
+        "pointerleave",
+        "mousedown",
+        "mouseup",
+        "mousemove",
+        "mouseover",
+        "mouseout",
+        "mouseenter",
+        "mouseleave",
+        "contextmenu",
+        "dblclick",
+        "wheel",
+        "dragstart"
+    ];
+    for (const eventName of pointerEvents) {
+        window.addEventListener(eventName, blockPointer, { capture: true, passive: false });
+    }
+    window.addEventListener("click", (e) => {
+        const pe = e;
+        if (pe.pointerType === "mouse" || pe.pointerType === "touch" || pe.pointerType === "pen" || e.detail > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }, { capture: true });
+}
+function getActiveCalendarDay() {
+    const days = calendar.querySelectorAll(".day");
+    if (days.length === 0)
+        return null;
+    const idx = Math.max(0, Math.min(activeDayIndex, days.length - 1));
+    return days[idx] || days[0];
+}
+function updateCalendarTabIndices() {
+    const days = calendar.querySelectorAll(".day");
+    days.forEach((d, idx) => {
+        d.tabIndex = idx === activeDayIndex ? 0 : -1;
+    });
+}
+function getActiveFilterTab() {
+    return filterTabs.find((tab) => tab.classList.contains("active")) || filterTabs[0] || null;
+}
+function selectFilterTab(tab) {
+    filterTabs.forEach((t) => {
+        const isActive = t === tab;
+        t.classList.toggle("active", isActive);
+        t.setAttribute("aria-selected", isActive ? "true" : "false");
+        t.tabIndex = isActive ? 0 : -1;
+    });
+    const filterVal = tab.dataset.filter || "All";
+    if (filterSelect) {
+        filterSelect.value = filterVal;
+    }
+    selectedIndex = -1;
+    renderMedia();
+    renderChart();
+}
+function selectFilterByIndex(index) {
+    if (filterTabs.length === 0)
+        return;
+    const safeIdx = ((index % filterTabs.length) + filterTabs.length) % filterTabs.length;
+    const targetTab = filterTabs[safeIdx];
+    if (targetTab) {
+        selectFilterTab(targetTab);
+        targetTab.focus();
+    }
+}
+function syncFilterTabsFromSelect() {
+    const val = filterSelect.value;
+    filterTabs.forEach((t) => {
+        const isActive = t.dataset.filter === val;
+        t.classList.toggle("active", isActive);
+        t.setAttribute("aria-selected", isActive ? "true" : "false");
+        t.tabIndex = isActive ? 0 : -1;
+    });
+}
+function getPageControls() {
+    const activeDay = getActiveCalendarDay();
+    const controls = [
+        aboutLink,
+        themeButton,
+        activeDay,
+        titleInput,
+        mediaType,
+        genreInput,
+        ratingInput,
+        submitButton,
+        searchInput,
+        getActiveFilterTab()
+    ];
+    return controls.filter((el) => Boolean(el));
+}
 function escapeHtml(value) {
     const div = document.createElement("div");
     div.textContent = value;
@@ -49,7 +185,8 @@ function getFilteredMedia() {
             item.title.toLowerCase().includes(search) ||
             item.genre?.toLowerCase().includes(search) ||
             item.type.toLowerCase().includes(search);
-        const matchesFilter = filter === "All" || item.type === filter;
+        const matchesFilter = filter === "All" ||
+            item.type.toLowerCase() === filter.toLowerCase();
         return matchesSearch && matchesFilter;
     });
 }
@@ -125,6 +262,7 @@ function renderCalendar() {
     }
     const maxCount = Math.max(...counts.values(), 1);
     for (let i = 29; i >= 0; i--) {
+        const dayIndex = 29 - i;
         const date = new Date();
         date.setHours(0, 0, 0, 0);
         date.setDate(date.getDate() - i);
@@ -132,6 +270,9 @@ function renderCalendar() {
         const count = counts.get(dateString) || 0;
         const day = document.createElement("div");
         day.className = "day";
+        day.setAttribute("role", "button");
+        day.dataset.dayIndex = String(dayIndex);
+        day.tabIndex = dayIndex === activeDayIndex ? 0 : -1;
         if (count > 0) {
             day.classList.add("active");
         }
@@ -141,7 +282,21 @@ function renderCalendar() {
         if (count === maxCount && count > 0) {
             day.classList.add("highest");
         }
-        day.title = `${formatDate(dateString)} · ${count} finished`;
+        const tooltip = `${formatDate(dateString)} · ${count} finished`;
+        day.title = tooltip;
+        day.setAttribute("aria-label", tooltip);
+        day.addEventListener("focus", () => {
+            activeDayIndex = dayIndex;
+            updateCalendarTabIndices();
+            activityText.textContent = tooltip;
+        });
+        day.addEventListener("blur", () => {
+            setTimeout(() => {
+                if (!calendar.contains(document.activeElement)) {
+                    updateStats();
+                }
+            }, 50);
+        });
         calendar.appendChild(day);
     }
 }
@@ -159,7 +314,9 @@ function renderMedia() {
         article.className = "media";
         article.dataset.id = String(item.id);
         article.dataset.index = String(index);
-        article.tabIndex = -1;
+        article.tabIndex = 0;
+        article.setAttribute("role", "article");
+        article.setAttribute("aria-label", `${item.title}, ${item.type}${item.genre ? ", " + item.genre : ""}, rating ${item.rating} of 5`);
         const stars = item.rating > 0
             ? "★".repeat(item.rating)
             : "—";
@@ -184,10 +341,11 @@ function renderMedia() {
                 <span class="stars">${stars}</span>
 
                 <button
+                    type="button"
                     class="delete"
                     data-id="${item.id}"
                     aria-label="Delete ${escapeHtml(item.title)}"
-                    tabindex="-1"
+                    tabindex="0"
                 >
                     ×
                 </button>
@@ -210,12 +368,58 @@ function updateSelectedMedia() {
                 : "0";
     });
     if (selectedIndex >= 0 && entries[selectedIndex]) {
-        entries[selectedIndex].focus({
-            preventScroll: true
-        });
-        entries[selectedIndex].scrollIntoView({
-            block: "nearest"
-        });
+        if (!entries[selectedIndex].contains(document.activeElement)) {
+            entries[selectedIndex].focus({
+                preventScroll: true
+            });
+        }
+        scrollIntoViewWithFooter(entries[selectedIndex]);
+    }
+}
+function updateChartActiveMonth(index) {
+    if (!chartMonthlyData.length)
+        return;
+    activeChartMonthIndex = Math.max(0, Math.min(index, chartMonthlyData.length - 1));
+    const current = chartMonthlyData[activeChartMonthIndex];
+    if (!current)
+        return;
+    if (analyticsText) {
+        analyticsText.textContent = `${current.fullDate}: ${current.count} finished (${activeChartMonthIndex + 1}/${chartMonthlyData.length})`;
+    }
+    const label = `Monthly output chart: ${current.fullDate}, ${current.count} finished. Month ${activeChartMonthIndex + 1} of ${chartMonthlyData.length}. Use Left and Right arrow keys to inspect months.`;
+    if (analyticsSection) {
+        analyticsSection.setAttribute("aria-label", label);
+    }
+    if (chartContainer) {
+        chartContainer.setAttribute("aria-label", label);
+    }
+    if (chart) {
+        if (typeof chart.setActiveElements === "function") {
+            try {
+                chart.setActiveElements([
+                    {
+                        datasetIndex: 0,
+                        index: activeChartMonthIndex
+                    }
+                ]);
+            }
+            catch { }
+        }
+        if (chart.tooltip && typeof chart.tooltip.setActiveElements === "function") {
+            try {
+                const meta = chart.getDatasetMeta ? chart.getDatasetMeta(0) : null;
+                const point = meta && meta.data ? meta.data[activeChartMonthIndex] : null;
+                const position = point ? { x: point.x, y: point.y } : { x: 0, y: 0 };
+                chart.tooltip.setActiveElements([
+                    {
+                        datasetIndex: 0,
+                        index: activeChartMonthIndex
+                    }
+                ], position);
+            }
+            catch { }
+        }
+        chart.update();
     }
 }
 function renderChart() {
@@ -223,28 +427,36 @@ function renderChart() {
     if (!canvas || typeof Chart === "undefined") {
         return;
     }
-    const monthlyCounts = new Map();
+    const months = [];
     for (let i = 5; i >= 0; i--) {
         const date = new Date();
         date.setDate(1);
         date.setMonth(date.getMonth() - i);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        monthlyCounts.set(key, 0);
+        const label = date.toLocaleDateString("en-US", {
+            month: "short"
+        });
+        const fullDate = date.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric"
+        });
+        months.push({ key, label, fullDate, count: 0 });
     }
     for (const item of media) {
         const date = new Date(item.finished_at);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        if (monthlyCounts.has(key)) {
-            monthlyCounts.set(key, (monthlyCounts.get(key) || 0) + 1);
+        const entry = months.find((m) => m.key === key);
+        if (entry) {
+            entry.count += 1;
         }
     }
-    const labels = Array.from(monthlyCounts.keys()).map((key) => {
-        const [year, month] = key.split("-");
-        return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString("en-US", {
-            month: "short"
-        });
-    });
-    const values = Array.from(monthlyCounts.values());
+    chartMonthlyData = months.map(({ label, count, fullDate }) => ({
+        label,
+        count,
+        fullDate
+    }));
+    const labels = chartMonthlyData.map((d) => d.label);
+    const values = chartMonthlyData.map((d) => d.count);
     if (chart) {
         chart.destroy();
     }
@@ -257,8 +469,8 @@ function renderChart() {
                     data: values,
                     borderWidth: 2,
                     tension: 0.35,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
+                    pointRadius: 4,
+                    pointHoverRadius: 7
                 }
             ]
         },
@@ -285,6 +497,7 @@ function renderChart() {
             }
         }
     });
+    updateChartActiveMonth(activeChartMonthIndex);
 }
 async function loadMedia() {
     try {
@@ -341,6 +554,7 @@ async function addMedia() {
     }
 }
 async function deleteMedia(id) {
+    const previousIndex = selectedIndex;
     const response = await fetch(`/api/media/${id}`, {
         method: "DELETE"
     });
@@ -348,10 +562,26 @@ async function deleteMedia(id) {
         return;
     }
     media = media.filter((item) => item.id !== id);
-    selectedIndex = -1;
     updateStats();
     renderCalendar();
-    renderMedia();
+    const filtered = getFilteredMedia();
+    if (filtered.length > 0) {
+        selectedIndex = Math.min(Math.max(0, previousIndex), filtered.length - 1);
+        renderMedia();
+        const entries = Array.from(mediaList.querySelectorAll(".media"));
+        entries[selectedIndex]?.focus();
+    }
+    else {
+        selectedIndex = -1;
+        renderMedia();
+        const activeTab = getActiveFilterTab();
+        if (activeTab) {
+            activeTab.focus();
+        }
+        else {
+            searchInput.focus();
+        }
+    }
     renderChart();
 }
 function moveSelection(direction) {
@@ -376,10 +606,12 @@ function moveSelection(direction) {
 function focusNewEntry() {
     titleInput.focus();
     titleInput.select();
+    titleInput.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 function focusSearch() {
     searchInput.focus();
     searchInput.select();
+    searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 async function applyPendingKeyboardAction() {
     const action = sessionStorage.getItem("cadence-keyboard-action");
@@ -415,51 +647,166 @@ async function applyPendingKeyboardAction() {
         const selected = getFilteredMedia()[0];
         selectedIndex = 0;
         updateSelectedMedia();
-        const response = await fetch(`/api/media/${selected.id}/rating`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ rating })
-        });
-        if (response.ok) {
-            const updated = await response.json();
-            media = media.map((item) => item.id === updated.id ? updated : item);
-            renderMedia();
-            renderChart();
-        }
+        await setMediaRating(selected.id, rating);
+    }
+}
+async function setMediaRating(id, rating) {
+    const response = await fetch(`/api/media/${id}/rating`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ rating })
+    });
+    if (response.ok) {
+        const updated = await response.json();
+        media = media.map((item) => (item.id === updated.id ? updated : item));
+        renderMedia();
+        renderChart();
     }
 }
 function focusControl(direction) {
-    const currentIndex = formControls.indexOf(document.activeElement);
-    if (currentIndex === -1) {
-        if (selectedIndex >= 0) {
-            if (direction < 0) {
-                filterSelect.focus();
-            }
-            else {
-                moveSelection(1);
-            }
-            return;
-        }
-        formControls[direction > 0 ? 0 : formControls.length - 1].focus();
-        return;
-    }
-    const nextIndex = currentIndex + direction;
-    if (nextIndex < 0) {
-        formControls[formControls.length - 1].focus();
-        return;
-    }
-    if (nextIndex >= formControls.length) {
-        if (getFilteredMedia().length > 0) {
-            moveSelection(1);
+    const controls = getPageControls();
+    const filtered = getFilteredMedia();
+    const active = document.activeElement;
+    if (isAnalyticsFocused()) {
+        if (direction > 0) {
+            window.scrollTo({ top: 0, behavior: "instant" });
+            controls[0]?.focus();
         }
         else {
-            formControls[0].focus();
+            if (filtered.length > 0) {
+                selectedIndex = filtered.length - 1;
+                updateSelectedMedia();
+            }
+            else {
+                const activeFilter = getActiveFilterTab();
+                if (activeFilter) {
+                    activeFilter.focus();
+                }
+                else {
+                    controls[controls.length - 1]?.focus();
+                }
+            }
         }
         return;
     }
-    formControls[nextIndex].focus();
+    const isCalendar = calendar.contains(active);
+    const activeDay = getActiveCalendarDay();
+    const currentIndex = isCalendar && activeDay
+        ? controls.indexOf(activeDay)
+        : controls.indexOf(active);
+    if (currentIndex !== -1) {
+        if (direction > 0) {
+            if (currentIndex < controls.length - 1) {
+                controls[currentIndex + 1]?.focus();
+            }
+            else {
+                if (filtered.length > 0) {
+                    selectedIndex = 0;
+                    updateSelectedMedia();
+                }
+                else if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else {
+                    controls[0]?.focus();
+                }
+            }
+        }
+        else {
+            if (currentIndex > 0) {
+                controls[currentIndex - 1]?.focus();
+            }
+            else {
+                if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else if (filtered.length > 0) {
+                    selectedIndex = filtered.length - 1;
+                    updateSelectedMedia();
+                }
+                else {
+                    controls[controls.length - 1]?.focus();
+                }
+            }
+        }
+        return;
+    }
+    if (selectedIndex >= 0) {
+        if (direction > 0) {
+            if (selectedIndex < filtered.length - 1) {
+                moveSelection(1);
+            }
+            else {
+                selectedIndex = -1;
+                updateSelectedMedia();
+                if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else {
+                    controls[0]?.focus();
+                }
+            }
+        }
+        else {
+            if (selectedIndex > 0) {
+                moveSelection(-1);
+            }
+            else {
+                selectedIndex = -1;
+                updateSelectedMedia();
+                const activeFilter = getActiveFilterTab();
+                if (activeFilter) {
+                    activeFilter.focus();
+                }
+                else {
+                    controls[controls.length - 1]?.focus();
+                }
+            }
+        }
+        return;
+    }
+    const deleteBtn = active ? active.closest(".delete") : null;
+    if (deleteBtn) {
+        const mediaArticle = deleteBtn.closest(".media");
+        const currentIdx = mediaArticle ? Number(mediaArticle.dataset.index) : -1;
+        if (direction < 0) {
+            mediaArticle?.focus();
+        }
+        else {
+            if (currentIdx < filtered.length - 1 && currentIdx >= 0) {
+                selectedIndex = currentIdx + 1;
+                updateSelectedMedia();
+            }
+            else {
+                selectedIndex = -1;
+                updateSelectedMedia();
+                if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else {
+                    controls[0]?.focus();
+                }
+            }
+        }
+        return;
+    }
+    if (direction > 0) {
+        controls[0]?.focus();
+    }
+    else {
+        if (getAnalyticsElement()) {
+            focusAnalytics();
+        }
+        else if (filtered.length > 0) {
+            selectedIndex = filtered.length - 1;
+            updateSelectedMedia();
+        }
+        else {
+            controls[controls.length - 1]?.focus();
+        }
+    }
 }
 function changeSelect(select, direction) {
     const nextIndex = (select.selectedIndex + direction + select.options.length) %
@@ -476,19 +823,7 @@ async function changeSelectedRating(direction) {
     if (rating === selected.rating) {
         return;
     }
-    const response = await fetch(`/api/media/${selected.id}/rating`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ rating })
-    });
-    if (response.ok) {
-        const updated = await response.json();
-        media = media.map((item) => item.id === updated.id ? updated : item);
-        renderMedia();
-        renderChart();
-    }
+    await setMediaRating(selected.id, rating);
 }
 function toggleTheme() {
     document.body.classList.toggle("light");
@@ -503,10 +838,6 @@ function loadTheme() {
     }
 }
 document.addEventListener("keydown", async (event) => {
-    if (event.key === "Tab") {
-        event.preventDefault();
-        return;
-    }
     const target = event.target;
     if (event.altKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
@@ -518,45 +849,21 @@ document.addEventListener("keydown", async (event) => {
         window.location.href = "/about";
         return;
     }
-    const isTyping = target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT";
-    if (event.key === "PageDown" && !isTyping) {
+    const isTextInput = target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA";
+    const deleteBtn = target.closest(".delete");
+    if (deleteBtn && (event.key === "Enter" || event.key === " ")) {
         event.preventDefault();
-        window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
+        const id = Number(deleteBtn.dataset.id);
+        if (!isNaN(id)) {
+            await deleteMedia(id);
+        }
         return;
     }
-    if (event.key === "PageUp" && !isTyping) {
+    if (target.classList.contains("media") && event.key === "Enter") {
         event.preventDefault();
-        window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
-        return;
-    }
-    if (event.key === "Home" && !isTyping) {
-        event.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-    }
-    if (event.key === "End" && !isTyping) {
-        event.preventDefault();
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        return;
-    }
-    if (event.key === " " && !isTyping && target.tagName !== "BUTTON") {
-        event.preventDefault();
-        window.scrollBy({
-            top: event.shiftKey ? -window.innerHeight * 0.85 : window.innerHeight * 0.85,
-            behavior: "smooth"
-        });
-        return;
-    }
-    if (event.key === "Enter" && target === aboutLink) {
-        event.preventDefault();
-        window.location.href = "/about";
-        return;
-    }
-    if (event.key === "Enter" && target === themeButton) {
-        event.preventDefault();
-        toggleTheme();
+        const btn = target.querySelector(".delete");
+        btn?.focus();
         return;
     }
     if (event.key === "Enter" && mediaForm.contains(target)) {
@@ -564,25 +871,173 @@ document.addEventListener("keydown", async (event) => {
         await addMedia();
         return;
     }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    if (event.key === "Enter" && target === searchInput) {
         event.preventDefault();
-        if (selectedIndex >= 0 && !isTyping) {
-            if (event.key === "ArrowDown") {
-                moveSelection(1);
-            }
-            else if (selectedIndex === 0) {
-                selectedIndex = -1;
-                filterSelect.focus();
-                updateSelectedMedia();
-            }
-            else {
-                moveSelection(-1);
-            }
-        }
-        else {
-            focusControl(event.key === "ArrowDown" ? 1 : -1);
+        const filtered = getFilteredMedia();
+        if (filtered.length > 0) {
+            selectedIndex = 0;
+            updateSelectedMedia();
         }
         return;
+    }
+    if (event.key === "Tab") {
+        const controls = getPageControls();
+        const first = controls[0];
+        const filtered = getFilteredMedia();
+        if (isAnalyticsFocused()) {
+            event.preventDefault();
+            if (event.shiftKey) {
+                if (filtered.length > 0) {
+                    const allMedia = mediaList.querySelectorAll(".media");
+                    const lastEl = allMedia[allMedia.length - 1];
+                    const lastDelete = lastEl?.querySelector(".delete");
+                    (lastDelete || lastEl)?.focus();
+                }
+                else {
+                    const activeFilter = getActiveFilterTab();
+                    if (activeFilter) {
+                        activeFilter.focus();
+                    }
+                    else {
+                        controls[controls.length - 1]?.focus();
+                    }
+                }
+            }
+            else {
+                first?.focus();
+            }
+            return;
+        }
+        if (event.shiftKey && target === first) {
+            event.preventDefault();
+            if (getAnalyticsElement()) {
+                focusAnalytics();
+            }
+            else if (filtered.length > 0) {
+                const allMedia = mediaList.querySelectorAll(".media");
+                const lastEl = allMedia[allMedia.length - 1];
+                const lastDelete = lastEl?.querySelector(".delete");
+                (lastDelete || lastEl)?.focus();
+            }
+            else {
+                controls[controls.length - 1]?.focus();
+            }
+            return;
+        }
+        if (!event.shiftKey) {
+            const allDeleteBtns = mediaList.querySelectorAll(".delete");
+            const lastDelete = allDeleteBtns[allDeleteBtns.length - 1];
+            const allMedia = mediaList.querySelectorAll(".media");
+            const lastMedia = allMedia[allMedia.length - 1];
+            const lastEl = lastDelete || lastMedia;
+            if (lastEl && target === lastEl) {
+                event.preventDefault();
+                if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else {
+                    first?.focus();
+                }
+                return;
+            }
+        }
+        const activeFilter = getActiveFilterTab();
+        if (target === activeFilter && !event.shiftKey) {
+            if (filtered.length > 0) {
+                event.preventDefault();
+                selectedIndex = 0;
+                updateSelectedMedia();
+                return;
+            }
+            else {
+                event.preventDefault();
+                if (getAnalyticsElement()) {
+                    focusAnalytics();
+                }
+                else {
+                    first?.focus();
+                }
+                return;
+            }
+        }
+    }
+    if (target.classList.contains("filter-tab")) {
+        const currentIdx = filterTabs.indexOf(target);
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            selectFilterByIndex(currentIdx - 1);
+            return;
+        }
+        if (event.key === "ArrowRight") {
+            event.preventDefault();
+            selectFilterByIndex(currentIdx + 1);
+            return;
+        }
+        if (event.key === "Home") {
+            event.preventDefault();
+            selectFilterByIndex(0);
+            return;
+        }
+        if (event.key === "End") {
+            event.preventDefault();
+            selectFilterByIndex(filterTabs.length - 1);
+            return;
+        }
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectFilterTab(target);
+            return;
+        }
+    }
+    if (isAnalyticsFocused()) {
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            updateChartActiveMonth(activeChartMonthIndex - 1);
+            return;
+        }
+        if (event.key === "ArrowRight") {
+            event.preventDefault();
+            updateChartActiveMonth(activeChartMonthIndex + 1);
+            return;
+        }
+        if (event.key === "Home") {
+            event.preventDefault();
+            updateChartActiveMonth(0);
+            return;
+        }
+        if (event.key === "End") {
+            event.preventDefault();
+            updateChartActiveMonth(chartMonthlyData.length - 1);
+            return;
+        }
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        focusControl(event.key === "ArrowDown" ? 1 : -1);
+        return;
+    }
+    if (target === aboutLink && event.key === "ArrowRight") {
+        event.preventDefault();
+        themeButton.focus();
+        return;
+    }
+    if (target === themeButton && event.key === "ArrowLeft") {
+        event.preventDefault();
+        aboutLink.focus();
+        return;
+    }
+    if (calendar.contains(target) && target.classList.contains("day")) {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            const days = Array.from(calendar.querySelectorAll(".day"));
+            const currentIdx = days.indexOf(target);
+            if (currentIdx !== -1) {
+                const step = event.key === "ArrowRight" ? 1 : -1;
+                const nextIdx = Math.max(0, Math.min(days.length - 1, currentIdx + step));
+                days[nextIdx]?.focus();
+            }
+            return;
+        }
     }
     if (target instanceof HTMLSelectElement) {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -593,78 +1048,93 @@ document.addEventListener("keydown", async (event) => {
     }
     if ((event.key === "ArrowLeft" || event.key === "ArrowRight") &&
         selectedIndex >= 0 &&
-        !isTyping) {
+        !isTextInput) {
         event.preventDefault();
         await changeSelectedRating(event.key === "ArrowRight" ? 1 : -1);
         return;
     }
-    if (event.key === "/" && !isTyping) {
+    if ((event.key === "/" && !isTextInput) ||
+        ((event.altKey || event.ctrlKey) && event.key === "/")) {
         event.preventDefault();
         focusSearch();
         return;
     }
-    if (event.key.toLowerCase() === "n" && !isTyping) {
+    if ((event.key.toLowerCase() === "n" && !isTextInput && !(target instanceof HTMLSelectElement)) ||
+        (event.altKey && event.key.toLowerCase() === "n")) {
         event.preventDefault();
         focusNewEntry();
         return;
     }
-    if (event.key.toLowerCase() === "a" && !isTyping) {
+    if ((event.key.toLowerCase() === "a" && !isTextInput && !(target instanceof HTMLSelectElement)) ||
+        (event.altKey && event.key.toLowerCase() === "a")) {
         event.preventDefault();
         window.location.href = "/about";
         return;
     }
-    if (event.key === "Escape") {
-        event.preventDefault();
-        if (isTyping) {
-            target.blur();
-        }
-        else {
-            window.location.href = "/";
-        }
-        return;
-    }
-    if (event.key.toLowerCase() === "t" && !isTyping) {
+    if ((event.key.toLowerCase() === "t" && !isTextInput && !(target instanceof HTMLSelectElement)) ||
+        (event.altKey && event.key.toLowerCase() === "t")) {
         event.preventDefault();
         toggleTheme();
         return;
     }
-    if (event.key === "Delete" &&
-        selectedIndex >= 0 &&
-        !isTyping) {
+    if ((event.key.toLowerCase() === "h" && !isTextInput && !(target instanceof HTMLSelectElement)) ||
+        (event.altKey && event.key.toLowerCase() === "h")) {
         event.preventDefault();
-        const selected = getFilteredMedia()[selectedIndex];
-        if (selected) {
-            await deleteMedia(selected.id);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        focusNewEntry();
+        return;
+    }
+    if (event.key === "Escape") {
+        event.preventDefault();
+        if (target === searchInput && searchInput.value) {
+            searchInput.value = "";
+            selectedIndex = -1;
+            renderMedia();
+        }
+        else if (deleteBtn) {
+            const mediaArticle = deleteBtn.closest(".media");
+            mediaArticle?.focus();
+        }
+        else if (selectedIndex >= 0) {
+            selectedIndex = -1;
+            updateSelectedMedia();
+            target.blur();
+        }
+        else {
+            target.blur();
         }
         return;
+    }
+    if ((event.key === "Delete" || event.key === "Backspace") &&
+        !isTextInput) {
+        if (deleteBtn) {
+            event.preventDefault();
+            const id = Number(deleteBtn.dataset.id);
+            if (!isNaN(id)) {
+                await deleteMedia(id);
+            }
+            return;
+        }
+        if (selectedIndex >= 0) {
+            event.preventDefault();
+            const selected = getFilteredMedia()[selectedIndex];
+            if (selected) {
+                await deleteMedia(selected.id);
+            }
+            return;
+        }
     }
     if (event.key >= "1" &&
         event.key <= "5" &&
         selectedIndex >= 0 &&
-        !isTyping) {
+        !isTextInput &&
+        !(target instanceof HTMLSelectElement)) {
         event.preventDefault();
         const selected = getFilteredMedia()[selectedIndex];
-        if (!selected) {
-            return;
+        if (selected) {
+            await setMediaRating(selected.id, Number(event.key));
         }
-        const rating = Number(event.key);
-        const response = await fetch(`/api/media/${selected.id}/rating`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                rating
-            })
-        });
-        if (response.ok) {
-            const updated = await response.json();
-            media = media.map((item) => item.id === updated.id
-                ? updated
-                : item);
-            renderMedia();
-            renderChart();
-        }
+        return;
     }
 });
 mediaForm.addEventListener("submit", async (event) => {
@@ -676,30 +1146,79 @@ searchInput.addEventListener("input", () => {
     renderMedia();
 });
 filterSelect.addEventListener("change", () => {
+    syncFilterTabsFromSelect();
     selectedIndex = -1;
     renderMedia();
 });
-for (const eventName of [
-    "click",
-    "dblclick",
-    "auxclick",
-    "pointerdown",
-    "pointerup",
-    "pointermove",
-    "contextmenu",
-    "dragstart",
-    "touchstart",
-    "touchmove",
-    "touchend"
-]) {
-    document.addEventListener(eventName, (event) => {
-        event.preventDefault();
-    }, { capture: true, passive: false });
+filterTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+        selectFilterTab(tab);
+    });
+});
+if (themeButton) {
+    themeButton.addEventListener("click", () => {
+        toggleTheme();
+    });
 }
-document.addEventListener("wheel", (event) => {
-    event.preventDefault();
-}, { capture: true, passive: false });
+const searchSymbol = document.querySelector(".search-symbol");
+if (searchSymbol) {
+    searchSymbol.addEventListener("click", () => {
+        focusSearch();
+    });
+}
+mediaList.addEventListener("click", async (event) => {
+    const target = event.target;
+    const deleteButton = target.closest(".delete");
+    if (deleteButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const id = Number(deleteButton.dataset.id);
+        if (!isNaN(id)) {
+            await deleteMedia(id);
+        }
+        return;
+    }
+    const mediaArticle = target.closest(".media");
+    if (mediaArticle) {
+        const index = Number(mediaArticle.dataset.index);
+        if (!isNaN(index)) {
+            selectedIndex = index;
+            updateSelectedMedia();
+        }
+    }
+});
+mediaList.addEventListener("focusin", (event) => {
+    const target = event.target;
+    const mediaArticle = target.closest(".media");
+    if (mediaArticle) {
+        const index = Number(mediaArticle.dataset.index);
+        if (!isNaN(index) && index !== selectedIndex) {
+            selectedIndex = index;
+            const entries = Array.from(mediaList.querySelectorAll(".media"));
+            entries.forEach((entry, idx) => {
+                entry.style.outline =
+                    idx === selectedIndex ? "2px solid var(--accent)" : "none";
+                entry.style.outlineOffset =
+                    idx === selectedIndex ? "2px" : "0";
+            });
+        }
+    }
+});
+document.addEventListener("focusin", (event) => {
+    const target = event.target;
+    if (!mediaList.contains(target) && selectedIndex !== -1) {
+        selectedIndex = -1;
+        updateSelectedMedia();
+    }
+});
+const analyticsEl = getAnalyticsElement();
+if (analyticsEl) {
+    analyticsEl.addEventListener("focus", () => {
+        updateChartActiveMonth(activeChartMonthIndex);
+    });
+}
 loadTheme();
 loadMedia();
 focusNewEntry();
+disableMouse();
 export {};
