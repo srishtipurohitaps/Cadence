@@ -1,7 +1,7 @@
 {
     "version": 2,
     "installCommand": "npm install --ignore-scripts=false",
-    "buildCommand": "npm rebuild better-sqlite3 && npm run build",
+    "buildCommand": "npm rebuild better-sqlite3 && node node_modules/typescript/bin/tsc",
     "functions": {
         "api/index.ts": {
             "includeFiles": "{pages,static}/**"
