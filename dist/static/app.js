@@ -17,6 +17,7 @@ const calendar = document.getElementById("calendar");
 const activityText = document.getElementById("activityText");
 const themeButton = document.getElementById("themeButton");
 const aboutLink = document.querySelector(".about-link");
+const outputSection = document.getElementById("output");
 const formControls = [
     aboutLink,
     themeButton,
@@ -502,6 +503,12 @@ function loadTheme() {
         document.body.classList.add("light");
     }
 }
+function scrollToOutput() {
+    outputSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
 document.addEventListener("keydown", async (event) => {
     if (event.key === "Tab") {
         event.preventDefault();
@@ -538,7 +545,7 @@ document.addEventListener("keydown", async (event) => {
     }
     if (event.key === "End" && !isTyping) {
         event.preventDefault();
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        scrollToOutput();
         return;
     }
     if (event.key === " " && !isTyping && target.tagName !== "BUTTON") {
