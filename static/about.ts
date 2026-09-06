@@ -1,4 +1,7 @@
 const themeButton = document.getElementById("themeButton") as HTMLButtonElement;
+const backLink = document.querySelector(".about-back a") as HTMLAnchorElement;
+
+const aboutControls: HTMLElement[] = [themeButton, backLink];
 
 function toggleTheme(): void {
     document.body.classList.toggle("light");
@@ -24,6 +27,23 @@ function returnToCadence(action: string): void {
     window.location.href = "/";
 }
 
+function focusAboutControl(direction: number): void {
+    const currentIndex = aboutControls.indexOf(
+        document.activeElement as HTMLElement
+    );
+
+    if (currentIndex === -1) {
+        aboutControls[direction > 0 ? 0 : aboutControls.length - 1].focus();
+        return;
+    }
+
+    const nextIndex =
+        (currentIndex + direction + aboutControls.length) %
+        aboutControls.length;
+
+    aboutControls[nextIndex].focus();
+}
+
 document.addEventListener("keydown", (event) => {
     if (event.key === "Tab") {
         event.preventDefault();
@@ -31,6 +51,7 @@ document.addEventListener("keydown", (event) => {
     }
 
     const target = event.target as HTMLElement;
+    const isOwnControl = aboutControls.includes(target);
 
     if (event.altKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
@@ -48,6 +69,39 @@ document.addEventListener("keydown", (event) => {
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
+
+    if (event.key === "PageDown" && !isTyping) {
+        event.preventDefault();
+        window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
+        return;
+    }
+
+    if (event.key === "PageUp" && !isTyping) {
+        event.preventDefault();
+        window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
+        return;
+    }
+
+    if (event.key === "Home" && !isTyping) {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+    }
+
+    if (event.key === "End" && !isTyping) {
+        event.preventDefault();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        return;
+    }
+
+    if (event.key === " " && !isTyping && target.tagName !== "BUTTON") {
+        event.preventDefault();
+        window.scrollBy({
+            top: event.shiftKey ? -window.innerHeight * 0.85 : window.innerHeight * 0.85,
+            behavior: "smooth"
+        });
+        return;
+    }
 
     if (isTyping) {
         return;
@@ -67,23 +121,23 @@ document.addEventListener("keydown", (event) => {
 
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
         event.preventDefault();
-        returnToCadence(event.key === "ArrowUp" ? "up" : "down");
+        focusAboutControl(event.key === "ArrowDown" ? 1 : -1);
         return;
     }
 
-    if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        window.location.href = "/";
-        return;
-    }
-
-    if (event.key === "ArrowRight") {
+    if (event.key === "Enter" && target === themeButton) {
         event.preventDefault();
         toggleTheme();
         return;
     }
 
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && target === backLink) {
+        event.preventDefault();
+        window.location.href = "/";
+        return;
+    }
+
+    if (event.key === "Enter" && !isOwnControl) {
         event.preventDefault();
         returnToCadence("confirm");
         return;

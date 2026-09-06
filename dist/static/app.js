@@ -16,7 +16,10 @@ const longestElement = document.getElementById("longest");
 const calendar = document.getElementById("calendar");
 const activityText = document.getElementById("activityText");
 const themeButton = document.getElementById("themeButton");
+const aboutLink = document.querySelector(".about-link");
 const formControls = [
+    aboutLink,
+    themeButton,
     titleInput,
     mediaType,
     genreInput,
@@ -518,6 +521,34 @@ document.addEventListener("keydown", async (event) => {
     const isTyping = target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
+    if (event.key === "PageDown" && !isTyping) {
+        event.preventDefault();
+        window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
+        return;
+    }
+    if (event.key === "PageUp" && !isTyping) {
+        event.preventDefault();
+        window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
+        return;
+    }
+    if (event.key === "Home" && !isTyping) {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+    }
+    if (event.key === "End" && !isTyping) {
+        event.preventDefault();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        return;
+    }
+    if (event.key === " " && !isTyping && target.tagName !== "BUTTON") {
+        event.preventDefault();
+        window.scrollBy({
+            top: event.shiftKey ? -window.innerHeight * 0.85 : window.innerHeight * 0.85,
+            behavior: "smooth"
+        });
+        return;
+    }
     if (event.key === "Enter" && mediaForm.contains(target)) {
         event.preventDefault();
         await addMedia();
