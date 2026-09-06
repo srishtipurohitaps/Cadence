@@ -12,6 +12,7 @@
   },
   "include": [
     "*.ts",
+    "api/**/*.ts",
     "static/**/*.ts"
   ],
   "exclude": [
