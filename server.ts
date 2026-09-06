@@ -1,13 +1,21 @@
 import express from "express";
 import path from "path";
-import db from "./database";
+import fs from "fs";
+import db from "./database.js";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-app.use("/static", express.static(path.join(process.cwd(), "static")));
+const sourceStaticDirectory = path.join(process.cwd(), "static");
+const compiledStaticDirectory = path.join(process.cwd(), "dist", "static");
+
+app.use("/static", express.static(sourceStaticDirectory));
+
+if (fs.existsSync(compiledStaticDirectory)) {
+    app.use("/static", express.static(compiledStaticDirectory));
+}
 
 app.get("/", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "pages", "index.html"));
@@ -30,11 +38,22 @@ app.get("/api/media", (_req, res) => {
 });
 
 app.post("/api/media", (req, res) => {
-    const { title, type, genre, rating } = req.body;
+    const body = req.body;
+    const title = typeof body?.title === "string" ? body.title.trim() : "";
+    const type = typeof body?.type === "string" ? body.type.trim() : "";
+    const genre = typeof body?.genre === "string" ? body.genre.trim() : null;
+    const rating = Number(body?.rating ?? 0);
 
     if (!title || !type) {
         res.status(400).json({
             error: "Title and type are required"
+        });
+        return;
+    }
+
+    if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
+        res.status(400).json({
+            error: "Rating must be an integer from 0 to 5"
         });
         return;
     }
@@ -54,10 +73,10 @@ app.post("/api/media", (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?)
         `)
         .run(
-            title.trim(),
+            title,
             type,
-            genre?.trim() || null,
-            Number(rating) || 0,
+            genre || null,
+            rating,
             now,
             now
         );
@@ -97,9 +116,14 @@ app.delete("/api/media/:id", (req, res) => {
 
 app.patch("/api/media/:id/rating", (req, res) => {
     const id = Number(req.params.id);
-    const rating = Number(req.body.rating);
+    const rating = Number(req.body?.rating);
 
-    if (!Number.isInteger(id) || rating < 0 || rating > 5) {
+    if (
+        !Number.isInteger(id) ||
+        !Number.isInteger(rating) ||
+        rating < 0 ||
+        rating > 5
+    ) {
         res.status(400).json({
             error: "Invalid rating"
         });

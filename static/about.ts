@@ -19,6 +19,11 @@ function loadTheme(): void {
     }
 }
 
+function returnToCadence(action: string): void {
+    sessionStorage.setItem("cadence-keyboard-action", action);
+    window.location.href = "/";
+}
+
 document.addEventListener("keydown", (event) => {
     if (event.key === "Tab") {
         event.preventDefault();
@@ -26,6 +31,18 @@ document.addEventListener("keydown", (event) => {
     }
 
     const target = event.target as HTMLElement;
+
+    if (event.altKey && event.key.toLowerCase() === "t") {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
+
+    if (event.altKey && event.key.toLowerCase() === "h") {
+        event.preventDefault();
+        window.location.href = "/";
+        return;
+    }
 
     const isTyping =
         target.tagName === "INPUT" ||
@@ -36,9 +53,45 @@ document.addEventListener("keydown", (event) => {
         return;
     }
 
+    if (event.key === "/") {
+        event.preventDefault();
+        returnToCadence("search");
+        return;
+    }
+
+    if (event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        returnToCadence("new");
+        return;
+    }
+
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        returnToCadence(event.key === "ArrowUp" ? "up" : "down");
+        return;
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+        returnToCadence("confirm");
+        return;
+    }
+
+    if (event.key >= "1" && event.key <= "5") {
+        event.preventDefault();
+        returnToCadence(`rate:${event.key}`);
+        return;
+    }
+
     if (event.key.toLowerCase() === "t") {
         event.preventDefault();
         toggleTheme();
+        return;
+    }
+
+    if (event.key.toLowerCase() === "h") {
+        event.preventDefault();
+        window.location.href = "/";
         return;
     }
 
@@ -49,7 +102,11 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-themeButton.addEventListener("click", (event) => {
+document.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+}, { capture: true });
+
+document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
 });
 

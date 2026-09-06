@@ -14,6 +14,14 @@ let media: Media[] = [];
 let selectedIndex = -1;
 let chart: any = null;
 
+type PendingKeyboardAction =
+    | "search"
+    | "new"
+    | "up"
+    | "down"
+    | "confirm"
+    | `rate:${number}`;
+
 const mediaList = document.getElementById("mediaList") as HTMLDivElement;
 const emptyState = document.getElementById("empty") as HTMLDivElement;
 const searchInput = document.getElementById("search") as HTMLInputElement;
@@ -273,6 +281,9 @@ function updateSelectedMedia(): void {
     });
 
     if (selectedIndex >= 0 && entries[selectedIndex]) {
+        entries[selectedIndex].focus({
+            preventScroll: true
+        });
         entries[selectedIndex].scrollIntoView({
             block: "nearest"
         });
@@ -387,6 +398,7 @@ async function loadMedia(): Promise<void> {
         renderCalendar();
         renderMedia();
         renderChart();
+        void applyPendingKeyboardAction();
     } catch {
         activityText.textContent = "Could not load your cadence.";
     }
@@ -494,6 +506,77 @@ function focusSearch(): void {
     searchInput.select();
 }
 
+async function applyPendingKeyboardAction(): Promise<void> {
+    const action = sessionStorage.getItem("cadence-keyboard-action") as
+        | PendingKeyboardAction
+        | null;
+
+    if (!action) {
+        return;
+    }
+
+    sessionStorage.removeItem("cadence-keyboard-action");
+
+    if (action === "search") {
+        focusSearch();
+        return;
+    }
+
+    if (action === "new") {
+        focusNewEntry();
+        return;
+    }
+
+    if (action === "up") {
+        moveSelection(-1);
+        return;
+    }
+
+    if (action === "down") {
+        moveSelection(1);
+        return;
+    }
+
+    if (action === "confirm") {
+        if (getFilteredMedia().length > 0) {
+            selectedIndex = 0;
+            updateSelectedMedia();
+        }
+
+        return;
+    }
+
+    if (action.startsWith("rate:") && getFilteredMedia().length > 0) {
+        const rating = Number(action.slice(5));
+        const selected = getFilteredMedia()[0];
+
+        selectedIndex = 0;
+        updateSelectedMedia();
+
+        const response = await fetch(
+            `/api/media/${selected.id}/rating`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ rating })
+            }
+        );
+
+        if (response.ok) {
+            const updated: Media = await response.json();
+
+            media = media.map((item) =>
+                item.id === updated.id ? updated : item
+            );
+
+            renderMedia();
+            renderChart();
+        }
+    }
+}
+
 function focusNextFormField(): void {
     const fields = [
         titleInput,
@@ -561,6 +644,18 @@ document.addEventListener("keydown", async (event) => {
 
     const target = event.target as HTMLElement;
 
+    if (event.altKey && event.key.toLowerCase() === "t") {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
+
+    if (event.altKey && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        window.location.href = "/about";
+        return;
+    }
+
     const isTyping =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
@@ -578,14 +673,19 @@ document.addEventListener("keydown", async (event) => {
         return;
     }
 
+    if (event.key.toLowerCase() === "a" && !isTyping) {
+        event.preventDefault();
+        window.location.href = "/about";
+        return;
+    }
+
     if (event.key === "Escape") {
         event.preventDefault();
 
         if (isTyping) {
             target.blur();
         } else {
-            selectedIndex = -1;
-            updateSelectedMedia();
+            window.location.href = "/";
         }
 
         return;
@@ -593,31 +693,31 @@ document.addEventListener("keydown", async (event) => {
 
     if (event.key === "ArrowDown") {
         event.preventDefault();
-
-        if (isTyping) {
-            focusNextFormField();
-        } else {
-            moveSelection(1);
-        }
-
+        moveSelection(1);
         return;
     }
 
     if (event.key === "ArrowUp") {
         event.preventDefault();
-
-        if (isTyping) {
-            focusPreviousFormField();
-        } else {
-            moveSelection(-1);
-        }
-
+        moveSelection(-1);
         return;
     }
 
     if (event.key.toLowerCase() === "t" && !isTyping) {
         event.preventDefault();
         toggleTheme();
+        return;
+    }
+
+    if (event.key === "Enter" && selectedIndex >= 0 && !isTyping) {
+        event.preventDefault();
+
+        const selected = getFilteredMedia()[selectedIndex];
+
+        if (selected) {
+            await deleteMedia(selected.id);
+        }
+
         return;
     }
 
@@ -696,11 +796,11 @@ filterSelect.addEventListener("change", () => {
     renderMedia();
 });
 
-themeButton.addEventListener("click", (event) => {
+document.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-});
+}, { capture: true });
 
-mediaList.addEventListener("click", (event) => {
+document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
 });
 

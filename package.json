@@ -4,9 +4,9 @@
   "description": "a record of what you finish",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "npm run build && node dist/server.js",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "npm run build && node dist/server.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",

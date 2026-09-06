@@ -44,6 +44,13 @@ select {
     font: inherit;
 }
 
+a,
+button,
+input,
+select {
+    pointer-events: none;
+}
+
 button,
 select {
     cursor: pointer;
@@ -59,6 +66,7 @@ select:focus-visible {
 .app {
     width: min(1120px, calc(100% - 40px));
     margin: 0 auto;
+    pointer-events: none;
 }
 
 .topbar {
@@ -459,6 +467,11 @@ select:focus {
     transform: translateX(5px);
     background: var(--surface-hover);
     border-color: #48484f;
+}
+
+.media:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .media-icon {
