@@ -1,7 +1,9 @@
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
-const dataDirectory = path.join(process.cwd(), "data");
+const dataDirectory = process.env.VERCEL
+    ? path.join("/tmp", "cadence")
+    : path.join(process.cwd(), "data");
 if (!fs.existsSync(dataDirectory)) {
     fs.mkdirSync(dataDirectory, { recursive: true });
 }

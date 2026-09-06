@@ -115,6 +115,9 @@ app.patch("/api/media/:id/rating", (req, res) => {
         .get(id);
     res.json(media);
 });
-app.listen(PORT, () => {
-    console.log(`Cadence running at http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Cadence running at http://localhost:${PORT}`);
+    });
+}
+export default app;
