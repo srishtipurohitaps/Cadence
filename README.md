@@ -13,7 +13,7 @@ So I made Cadence, a small tracker for the things you actually finish. It keeps 
 * Add something you've finished and choose between a Movie, Show, Book, Game or Album
 * Add a genre and give it a rating out of five stars
 * Keep everything in one simple log, with your newest entries first
-* See the days you've finished something on a 30-day activity calendar
+* See the days you've finished something on an activity calendar
 * Keep track of your current and longest streak
 * See how much you've finished each month through a small analytics chart
 * Switch between light and dark mode with `T`
