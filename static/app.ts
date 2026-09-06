@@ -38,6 +38,16 @@ const calendar = document.getElementById("calendar") as HTMLDivElement;
 const activityText = document.getElementById("activityText") as HTMLParagraphElement;
 const themeButton = document.getElementById("themeButton") as HTMLButtonElement;
 
+const formControls: HTMLElement[] = [
+    titleInput,
+    mediaType,
+    genreInput,
+    ratingInput,
+    mediaForm.querySelector(".submit-button") as HTMLButtonElement,
+    searchInput,
+    filterSelect
+];
+
 function escapeHtml(value: string): string {
     const div = document.createElement("div");
     div.textContent = value;
@@ -577,44 +587,84 @@ async function applyPendingKeyboardAction(): Promise<void> {
     }
 }
 
-function focusNextFormField(): void {
-    const fields = [
-        titleInput,
-        mediaType,
-        genreInput,
-        ratingInput
-    ];
-
-    const currentIndex = fields.indexOf(
-        document.activeElement as HTMLInputElement | HTMLSelectElement
+function focusControl(direction: number): void {
+    const currentIndex = formControls.indexOf(
+        document.activeElement as HTMLElement
     );
 
-    const nextIndex =
-        currentIndex === -1
-            ? 0
-            : (currentIndex + 1) % fields.length;
+    if (currentIndex === -1) {
+        if (selectedIndex >= 0) {
+            if (direction < 0) {
+                filterSelect.focus();
+            } else {
+                moveSelection(1);
+            }
+            return;
+        }
 
-    fields[nextIndex].focus();
+        formControls[direction > 0 ? 0 : formControls.length - 1].focus();
+        return;
+    }
+
+    const nextIndex = currentIndex + direction;
+
+    if (nextIndex < 0) {
+        formControls[formControls.length - 1].focus();
+        return;
+    }
+
+    if (nextIndex >= formControls.length) {
+        if (getFilteredMedia().length > 0) {
+            moveSelection(1);
+        } else {
+            formControls[0].focus();
+        }
+        return;
+    }
+
+    formControls[nextIndex].focus();
 }
 
-function focusPreviousFormField(): void {
-    const fields = [
-        titleInput,
-        mediaType,
-        genreInput,
-        ratingInput
-    ];
+function changeSelect(select: HTMLSelectElement, direction: number): void {
+    const nextIndex =
+        (select.selectedIndex + direction + select.options.length) %
+        select.options.length;
 
-    const currentIndex = fields.indexOf(
-        document.activeElement as HTMLInputElement | HTMLSelectElement
-    );
+    select.selectedIndex = nextIndex;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+}
 
-    const previousIndex =
-        currentIndex <= 0
-            ? fields.length - 1
-            : currentIndex - 1;
+async function changeSelectedRating(direction: number): Promise<void> {
+    const selected = getFilteredMedia()[selectedIndex];
 
-    fields[previousIndex].focus();
+    if (!selected) {
+        return;
+    }
+
+    const rating = Math.max(0, Math.min(5, selected.rating + direction));
+
+    if (rating === selected.rating) {
+        return;
+    }
+
+    const response = await fetch(`/api/media/${selected.id}/rating`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ rating })
+    });
+
+    if (response.ok) {
+        const updated: Media = await response.json();
+
+        media = media.map((item) =>
+            item.id === updated.id ? updated : item
+        );
+
+        renderMedia();
+        renderChart();
+    }
 }
 
 function toggleTheme(): void {
@@ -661,6 +711,45 @@ document.addEventListener("keydown", async (event) => {
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
 
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+
+        if (selectedIndex >= 0 && !isTyping) {
+            if (event.key === "ArrowDown") {
+                moveSelection(1);
+            } else if (selectedIndex === 0) {
+                selectedIndex = -1;
+                filterSelect.focus();
+                updateSelectedMedia();
+            } else {
+                moveSelection(-1);
+            }
+        } else {
+            focusControl(event.key === "ArrowDown" ? 1 : -1);
+        }
+
+        return;
+    }
+
+    if (target instanceof HTMLSelectElement) {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            changeSelect(target, event.key === "ArrowRight" ? 1 : -1);
+        }
+
+        return;
+    }
+
+    if (
+        (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+        selectedIndex >= 0 &&
+        !isTyping
+    ) {
+        event.preventDefault();
+        await changeSelectedRating(event.key === "ArrowRight" ? 1 : -1);
+        return;
+    }
+
     if (event.key === "/" && !isTyping) {
         event.preventDefault();
         focusSearch();
@@ -691,33 +780,9 @@ document.addEventListener("keydown", async (event) => {
         return;
     }
 
-    if (event.key === "ArrowDown") {
-        event.preventDefault();
-        moveSelection(1);
-        return;
-    }
-
-    if (event.key === "ArrowUp") {
-        event.preventDefault();
-        moveSelection(-1);
-        return;
-    }
-
     if (event.key.toLowerCase() === "t" && !isTyping) {
         event.preventDefault();
         toggleTheme();
-        return;
-    }
-
-    if (event.key === "Enter" && selectedIndex >= 0 && !isTyping) {
-        event.preventDefault();
-
-        const selected = getFilteredMedia()[selectedIndex];
-
-        if (selected) {
-            await deleteMedia(selected.id);
-        }
-
         return;
     }
 
@@ -796,13 +861,28 @@ filterSelect.addEventListener("change", () => {
     renderMedia();
 });
 
-document.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-}, { capture: true });
+for (const eventName of [
+    "click",
+    "dblclick",
+    "auxclick",
+    "pointerdown",
+    "pointerup",
+    "pointermove",
+    "contextmenu",
+    "dragstart",
+    "touchstart",
+    "touchmove",
+    "touchend"
+]) {
+    document.addEventListener(eventName, (event) => {
+        event.preventDefault();
+    }, { capture: true, passive: false });
+}
 
-document.addEventListener("contextmenu", (event) => {
+document.addEventListener("wheel", (event) => {
     event.preventDefault();
-});
+}, { capture: true, passive: false });
 
 loadTheme();
 loadMedia();
+focusNewEntry();

@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
-    --background: #0d0d0f;
-    --surface: #151518;
-    --surface-hover: #1b1b1f;
-    --border: #303035;
-    --text: #f4f1e8;
-    --muted: #94949c;
-    --accent: #d9ff3f;
-    --accent-dark: #b9dc20;
-    --danger: #ff6b6b;
-    --shadow: rgba(0, 0, 0, 0.25);
+    --background: #151512;
+    --surface: #20201b;
+    --surface-hover: #2a2a22;
+    --border: #414139;
+    --text: #f7f3e8;
+    --muted: #aaa99c;
+    --accent: #d5ef72;
+    --accent-dark: #bad154;
+    --danger: #ef7770;
+    --shadow: rgba(0, 0, 0, 0.18);
 }
 
 * {
@@ -26,9 +26,14 @@ body {
     min-height: 100vh;
     background:
         radial-gradient(
-            circle at 85% 5%,
-            rgba(217, 255, 63, 0.07),
-            transparent 25%
+            circle at 80% 0%,
+            rgba(213, 239, 114, 0.10),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 0% 65%,
+            rgba(225, 177, 117, 0.05),
+            transparent 28%
         ),
         var(--background);
     color: var(--text);
@@ -53,7 +58,7 @@ select {
 
 button,
 select {
-    cursor: pointer;
+    cursor: default;
 }
 
 button:focus-visible,
@@ -119,19 +124,15 @@ select:focus-visible {
 .theme-button {
     width: 44px;
     height: 44px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
+    border-radius: 10px;
     background: var(--surface);
     color: var(--text);
     font-size: 19px;
-    transition:
-        transform 0.2s ease,
-        border-color 0.2s ease;
+    transition: transform 0.2s ease;
 }
 
 .theme-button:hover {
     transform: rotate(18deg);
-    border-color: var(--accent);
 }
 
 .stats-grid {
@@ -144,12 +145,12 @@ select:focus-visible {
 .stat-card {
     min-height: 174px;
     padding: 23px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     background: var(--surface);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 8px 30px var(--shadow);
+    box-shadow: 0 12px 32px var(--shadow);
 }
 
 .stat-card:first-child {
@@ -194,9 +195,9 @@ select:focus-visible {
 .panel {
     margin-bottom: 10px;
     padding: 25px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     background: var(--surface);
-    box-shadow: 0 8px 30px var(--shadow);
+    box-shadow: 0 12px 32px var(--shadow);
 }
 
 .panel-heading {
@@ -259,7 +260,7 @@ select:focus-visible {
     gap: 12px;
     min-height: 55px;
     padding: 10px 13px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
 }
 
 .keyboard-grid span {
@@ -271,7 +272,7 @@ select:focus-visible {
 kbd {
     min-width: 42px;
     padding: 6px 8px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     background: var(--background);
     color: var(--text);
     font-family: "DM Mono", monospace;
@@ -310,21 +311,18 @@ kbd {
 .day {
     aspect-ratio: 1;
     min-width: 0;
-    border: 1px solid var(--border);
-    background: transparent;
+    border-radius: 10px;
+    background: var(--surface-hover);
     transition:
         transform 0.15s ease,
-        background 0.15s ease,
-        border-color 0.15s ease;
+        background 0.15s ease;
 }
 
 .day:hover {
     transform: scale(1.12);
-    border-color: var(--muted);
 }
 
 .day.active {
-    border-color: var(--accent);
     background: var(--accent);
 }
 
@@ -334,7 +332,7 @@ kbd {
 
 .day.highest {
     opacity: 1;
-    box-shadow: 0 0 10px rgba(217, 255, 63, 0.2);
+    box-shadow: 0 0 10px rgba(213, 239, 114, 0.2);
 }
 
 form#mediaForm {
@@ -361,15 +359,12 @@ input,
 select {
     width: 100%;
     min-height: 45px;
-    border: 1px solid var(--border);
-    border-radius: 0;
+    border-radius: 10px;
     background: var(--background);
     color: var(--text);
     padding: 11px 13px;
     outline: none;
-    transition:
-        border-color 0.15s ease,
-        background 0.15s ease;
+    transition: background 0.15s ease;
 }
 
 input::placeholder {
@@ -381,15 +376,10 @@ select:hover {
     background: var(--surface-hover);
 }
 
-input:focus,
-select:focus {
-    border-color: var(--accent);
-}
-
 .submit-button {
     min-height: 45px;
     padding: 0 19px;
-    border: 1px solid var(--accent);
+    border-radius: 10px;
     background: var(--accent);
     color: #101010;
     font-weight: 700;
@@ -455,18 +445,16 @@ select:focus {
     gap: 17px;
     min-height: 88px;
     padding: 13px 17px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     background: var(--surface);
     transition:
         transform 0.15s ease,
-        background 0.15s ease,
-        border-color 0.15s ease;
+        background 0.15s ease;
 }
 
 .media:hover {
     transform: translateX(5px);
     background: var(--surface-hover);
-    border-color: #48484f;
 }
 
 .media:focus {
@@ -479,7 +467,7 @@ select:focus {
     height: 50px;
     display: grid;
     place-items: center;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     color: var(--muted);
     font-family: "DM Mono", monospace;
     font-size: 9px;
@@ -515,7 +503,6 @@ select:focus {
 .delete {
     margin-left: 14px;
     padding: 5px;
-    border: 0;
     background: transparent;
     color: var(--muted);
     font-size: 20px;
@@ -529,7 +516,7 @@ select:focus {
 
 .empty-state {
     padding: 75px 20px;
-    border: 1px dashed var(--border);
+    border-radius: 10px;
     text-align: center;
 }
 
@@ -539,7 +526,6 @@ select:focus {
     margin: 0 auto 15px;
     display: grid;
     place-items: center;
-    border: 1px solid var(--border);
     color: var(--accent);
     font-family: "DM Mono", monospace;
     font-size: 22px;
@@ -563,6 +549,13 @@ select:focus {
     margin-top: 10px;
 }
 
+.keyboard-notice {
+    color: var(--accent);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
 .chart-container {
     position: relative;
     height: 260px;
@@ -580,15 +573,15 @@ footer {
 }
 
 body.light {
-    --background: #f4f1e8;
-    --surface: #ffffff;
-    --surface-hover: #f0eee5;
-    --border: #d2d0c7;
-    --text: #171719;
-    --muted: #727278;
-    --accent: #8baa00;
-    --accent-dark: #718900;
-    --danger: #d94c4c;
+    --background: #f6f2e7;
+    --surface: #fffdf7;
+    --surface-hover: #f0eadc;
+    --border: #dad2c1;
+    --text: #28271f;
+    --muted: #767467;
+    --accent: #789018;
+    --accent-dark: #627714;
+    --danger: #c85752;
     --shadow: rgba(20, 20, 20, 0.08);
 }
 
@@ -679,4 +672,23 @@ body.light {
     .keyboard-grid {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+* {
+    border: none !important;
+}
+
+.theme-button,
+.stat-card,
+.panel,
+.media,
+.empty-state,
+.media-icon,
+input,
+select,
+.submit-button,
+.keyboard-grid div,
+kbd,
+.day {
+    border-radius: 10px;
 }

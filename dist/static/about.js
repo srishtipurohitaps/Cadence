@@ -52,6 +52,16 @@ document.addEventListener("keydown", (event) => {
         returnToCadence(event.key === "ArrowUp" ? "up" : "down");
         return;
     }
+    if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        window.location.href = "/";
+        return;
+    }
+    if (event.key === "ArrowRight") {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
     if (event.key === "Enter") {
         event.preventDefault();
         returnToCadence("confirm");
@@ -78,11 +88,25 @@ document.addEventListener("keydown", (event) => {
         return;
     }
 });
-document.addEventListener("pointerdown", (event) => {
+for (const eventName of [
+    "click",
+    "dblclick",
+    "auxclick",
+    "pointerdown",
+    "pointerup",
+    "pointermove",
+    "contextmenu",
+    "dragstart",
+    "touchstart",
+    "touchmove",
+    "touchend"
+]) {
+    document.addEventListener(eventName, (event) => {
+        event.preventDefault();
+    }, { capture: true, passive: false });
+}
+document.addEventListener("wheel", (event) => {
     event.preventDefault();
-}, { capture: true });
-document.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-});
+}, { capture: true, passive: false });
 loadTheme();
 export {};
