@@ -93,6 +93,16 @@ document.addEventListener("keydown", (event) => {
         focusAboutControl(event.key === "ArrowDown" ? 1 : -1);
         return;
     }
+    if (event.key === "Enter" && target === themeButton) {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
+    if (event.key === "Enter" && target === backLink) {
+        event.preventDefault();
+        window.location.href = "/";
+        return;
+    }
     if (event.key === "Enter" && !isOwnControl) {
         event.preventDefault();
         returnToCadence("confirm");

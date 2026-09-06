@@ -549,6 +549,16 @@ document.addEventListener("keydown", async (event) => {
         });
         return;
     }
+    if (event.key === "Enter" && target === aboutLink) {
+        event.preventDefault();
+        window.location.href = "/about";
+        return;
+    }
+    if (event.key === "Enter" && target === themeButton) {
+        event.preventDefault();
+        toggleTheme();
+        return;
+    }
     if (event.key === "Enter" && mediaForm.contains(target)) {
         event.preventDefault();
         await addMedia();
