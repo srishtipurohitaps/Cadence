@@ -711,6 +711,12 @@ document.addEventListener("keydown", async (event) => {
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT";
 
+    if (event.key === "Enter" && mediaForm.contains(target)) {
+        event.preventDefault();
+        await addMedia();
+        return;
+    }
+
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
 
